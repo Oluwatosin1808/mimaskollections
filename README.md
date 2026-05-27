@@ -1,6 +1,6 @@
-# Mima’s Collections
+# Mima's Collections
 
-Premium e-commerce storefront built with Next.js, TypeScript, and TailwindCSS.
+Ecommerce website for an SME in Lagos, Nigeria — premium e-commerce storefront built with Next.js, TypeScript, and TailwindCSS.
 
 ## Features
 
