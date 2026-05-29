@@ -38,6 +38,8 @@ export default function ShopClient({ products, categories }: ShopClientProps) {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [cmsProducts, setCmsProducts] = useState<Product[]>([]);
   const { addToCart, items } = useCart();
+  const [page, setPage] = useState(1);
+  const perPage = 10;
 
   useEffect(() => {
     setCmsProducts(loadCmsProducts());
@@ -72,6 +74,9 @@ export default function ShopClient({ products, categories }: ShopClientProps) {
         : allProducts.filter((product) => product.category === selectedCategory),
     [allProducts, selectedCategory]
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / perPage));
+  const displayedProducts = filteredProducts.slice((page - 1) * perPage, page * perPage);
 
   const getCartQuantity = (productId: string) =>
     items.find((item) => item.product.id === productId)?.quantity ?? 0;
@@ -120,15 +125,30 @@ export default function ShopClient({ products, categories }: ShopClientProps) {
             Use the dropdown to filter categories and add premium items to your checkout cart.
           </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              cartQuantity={getCartQuantity(product.id)}
-              onAddToCart={() => addToCart(product)}
-            />
-          ))}
+        <div>
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {displayedProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                cartQuantity={getCartQuantity(product.id)}
+                onAddToCart={() => addToCart(product)}
+              />
+            ))}
+          </div>
+
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="btn btn-ghost px-3 py-1">Prev</button>
+              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="btn btn-ghost px-3 py-1">Next</button>
+            </div>
+            <div className="text-sm text-stone-400">Page {page} of {totalPages}</div>
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button key={i} onClick={() => setPage(i + 1)} className={`px-2 py-1 rounded ${page === i + 1 ? 'bg-gold text-black' : 'bg-white/5 text-stone-300'}`}>{i + 1}</button>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCart } from "./CartContext";
 
 export default function CartPage() {
@@ -55,13 +56,15 @@ export default function CartPage() {
             <p className="text-sm uppercase tracking-[0.35em] text-gold">Order summary</p>
             <p className="mt-2 text-2xl font-semibold text-white">Total: NGN {cartTotal.toLocaleString()}</p>
           </div>
-          <button
-            type="button"
-            disabled={items.length === 0}
-            className={`btn ${items.length === 0 ? "btn-disabled" : "btn-primary"}`}
-          >
-            Proceed to checkout
-          </button>
+          <Link href="/checkout" className="w-full sm:w-auto">
+            <button
+              type="button"
+              disabled={items.length === 0}
+              className={`btn w-full sm:w-auto ${items.length === 0 ? "btn-disabled" : "btn-primary"}`}
+            >
+              Proceed to checkout
+            </button>
+          </Link>
         </div>
       </div>
     </div>
