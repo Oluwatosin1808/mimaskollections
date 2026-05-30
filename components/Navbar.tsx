@@ -39,20 +39,6 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-stone-100 md:hidden"
-            aria-label="Open mobile menu"
-            aria-expanded={isMobileOpen}
-            onClick={() => setIsMobileOpen((open) => !open)}
-          >
-            <span className="flex h-5 w-5 flex-col justify-between">
-              <span className="block h-0.5 w-full bg-white" />
-              <span className="block h-0.5 w-full bg-white" />
-              <span className="block h-0.5 w-full bg-white" />
-            </span>
-          </button>
-
           <Link href="/shop" className="btn btn-secondary-alt hidden md:inline-flex">
             Shop
           </Link>
@@ -68,6 +54,19 @@ export default function Navbar() {
             <span className="hidden text-sm md:inline">Cart</span>
             <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1.5 text-[0.65rem] font-semibold text-black md:static md:ml-3 md:px-2 md:py-1 md:text-xs">{cartCount}</span>
           </Link>
+          <button
+            type="button"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-stone-100 md:hidden"
+            aria-label="Open mobile menu"
+            aria-expanded={isMobileOpen}
+            onClick={() => setIsMobileOpen((open) => !open)}
+          >
+            <span className="flex h-5 w-5 flex-col justify-between">
+              <span className="block h-0.5 w-full bg-white" />
+              <span className="block h-0.5 w-full bg-white" />
+              <span className="block h-0.5 w-full bg-white" />
+            </span>
+          </button>
         </div>
       </div>
 

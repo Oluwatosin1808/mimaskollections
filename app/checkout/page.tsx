@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../components/CartContext";
 
@@ -27,6 +27,7 @@ export default function CheckoutPage() {
   const [completed, setCompleted] = useState(false);
   const [invoiceBase64, setInvoiceBase64] = useState<string | null>(null);
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
+  const invoiceUrlRef = useRef<string | null>(null);
 
   const deliveryFee = locationOptions.find((option) => option.value === location)?.fee ?? 0;
   const total = cartTotal + deliveryFee;
@@ -82,25 +83,27 @@ export default function CheckoutPage() {
   }
 
   useEffect(() => {
-    let objectUrl: string | null = null;
-
     if (!invoiceBase64) {
-      if (invoiceUrl) {
-        URL.revokeObjectURL(invoiceUrl);
+      if (invoiceUrlRef.current) {
+        URL.revokeObjectURL(invoiceUrlRef.current);
+        invoiceUrlRef.current = null;
         setInvoiceUrl(null);
       }
       return;
     }
 
+    let objectUrl: string | null = null;
+
     try {
       const byteCharacters = atob(invoiceBase64);
       const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
+      for (let i = 0; i < byteCharacters.length; i += 1) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: "application/pdf" });
       objectUrl = URL.createObjectURL(blob);
+      invoiceUrlRef.current = objectUrl;
       setInvoiceUrl(objectUrl);
     } catch (err) {
       console.error("Failed to create invoice URL", err);
