@@ -13,7 +13,7 @@ function mapCategory(row: Record<string, unknown>): Category {
   return { id, title, subtitle, href, icon };
 }
 
-function mapProduct(row: Record<string, unknown>): Product {
+export function mapProduct(row: Record<string, unknown>): Product {
   const id = String(row.id ?? row.slug ?? row.name ?? "product-unknown");
   const name = String(row.name ?? row.title ?? id);
   const description = String(row.description ?? row.details ?? "");
@@ -42,7 +42,7 @@ export async function getCategories(): Promise<Category[]> {
   if (!supabase) return staticCategories;
 
   try {
-    const { data, error } = await supabase.from("categories").select("*");
+    const { data, error } = await supabase.from("categories").select("id, title, subtitle, href, icon");
     if (error || !data || data.length === 0) return staticCategories;
     return data.map(mapCategory);
   } catch {
@@ -54,7 +54,7 @@ export async function getProducts(): Promise<Product[]> {
   if (!supabase) return staticProducts;
 
   try {
-    const { data, error } = await supabase.from("products").select("*");
+    const { data, error } = await supabase.from("products").select("id, title, description, price, category, image_url, quantity, in_stock");
     if (error || !data || data.length === 0) return staticProducts;
     return data.map(mapProduct);
   } catch {
@@ -68,7 +68,7 @@ export async function getProductById(id: string): Promise<Product | null> {
   }
 
   try {
-    const { data, error } = await supabase.from("products").select("*").eq("id", id).limit(1).single();
+    const { data, error } = await supabase.from("products").select("id, title, description, price, category, image_url, quantity, in_stock").eq("id", id).limit(1).single();
     if (error || !data) return staticProducts.find((product) => product.id === id) ?? null;
     return mapProduct(data);
   } catch {

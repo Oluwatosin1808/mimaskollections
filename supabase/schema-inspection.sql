@@ -59,3 +59,8 @@ create policy allow_authenticated_update_orders on orders
   for update using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 create policy allow_authenticated_delete_orders on orders
   for delete using (auth.role() = 'authenticated');
+-- Allow public (anon) checkout flow
+create policy allow_anon_insert_orders on orders
+  for insert with check (true);
+create policy allow_anon_select_orders on orders
+  for select using (true);

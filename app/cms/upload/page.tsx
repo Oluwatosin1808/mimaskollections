@@ -3,7 +3,8 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabaseClient";
-import { categoryLabels, normalizeProduct } from "../../../lib/catalog";
+import { categoryLabels } from "../../../lib/catalog";
+import { mapProduct } from "../../../lib/db";
 import type { Product } from "../../../lib/types";
 
 const categoryOptions = [
@@ -64,12 +65,12 @@ export default function CmsUploadPage() {
 
     const loadProducts = async () => {
       const client = supabase!;
-      const { data, error: fetchError } = await client.from("products").select("*");
+      const { data, error: fetchError } = await client.from("products").select("id, title, description, price, category, image_url, quantity, in_stock");
       if (fetchError) {
         setError(fetchError.message);
         return;
       }
-      setItems((data ?? []).map((product) => normalizeProduct(product as any)));
+      setItems((data ?? []).map((product) => mapProduct(product as any)));
     };
 
     loadProducts();
@@ -99,15 +100,14 @@ export default function CmsUploadPage() {
     const client = supabase!;
     const { data, error: insertError } = await client.from("products").insert([
       {
-        name: name.trim(),
+        title: name.trim(),
         description: description.trim(),
         price: Number(price || 0),
         category,
-        image: image.trim() || fallbackImage,
-        stock: availableStock,
-        in_stock: availableStock > 0
+        image_url: image.trim() || fallbackImage,
+        quantity: availableStock
       }
-    ]);
+    ]).select("id, title, description, price, category, image_url, quantity, in_stock");
 
     if (insertError) {
       setError(insertError.message);
@@ -116,7 +116,7 @@ export default function CmsUploadPage() {
     }
 
     setItems((current) => [
-      ...(data ?? []).map((item) => normalizeProduct(item as any)),
+      ...(data ?? []).map((item) => mapProduct(item as any)),
       ...current
     ]);
     setName("");

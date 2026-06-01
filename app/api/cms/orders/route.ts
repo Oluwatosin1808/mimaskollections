@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { supabase } from "../../../../lib/supabaseClient";
+import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
 
 export async function GET() {
-  if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
+  const adminClient = getSupabaseAdmin();
+  if (!adminClient) {
+    return NextResponse.json({ error: "Supabase admin client is not configured." }, { status: 500 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await adminClient
     .from("orders")
-    .select("*")
+    .select("id, order_number, name, email, phone, address, location, notes, subtotal, delivery_fee, total, status, items, invoice_pdf_base64, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {

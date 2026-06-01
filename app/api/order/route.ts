@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import puppeteer from "puppeteer";
-import { supabase } from "../../../lib/supabaseClient";
+import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
 
 const deliveryRates: Record<string, number> = {
   Tanke: 800,
@@ -145,11 +145,12 @@ export async function POST(request: Request) {
       invoice_pdf_base64: pdfBuffer ? pdfBuffer.toString("base64") : null
     };
 
-    if (!supabase) {
-      return NextResponse.json({ error: "Supabase client is not configured." }, { status: 500 });
+    const adminClient = getSupabaseAdmin();
+    if (!adminClient) {
+      return NextResponse.json({ error: "Supabase admin client is not configured. Check SUPABASE_SERVICE_ROLE_KEY." }, { status: 500 });
     }
 
-    const { error: insertError } = await supabase.from("orders").insert([orderData]);
+    const { error: insertError } = await adminClient.from("orders").insert([orderData]);
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
