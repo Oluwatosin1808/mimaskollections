@@ -29,7 +29,7 @@ const payload = JSON.stringify({
   ],
   subtotal: 17500,
   deliveryFee: 5000,
-  total: 22500
+  total: 1
 });
 
 const options = {

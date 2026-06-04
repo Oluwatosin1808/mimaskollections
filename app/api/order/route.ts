@@ -7,7 +7,7 @@ const deliveryRates: Record<string, number> = {
   "Outside Tanke": 1500,
   Lagos: 5000,
   Abuja: 5000,
-  Other: 4000
+  Other: 4000,
 };
 
 function generateOrderNumber() {
@@ -39,7 +39,7 @@ function buildInvoiceHtml({ name, email, phone, address, location, notes, orderN
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px">
+        <div style="display:grid;grid-template-columns:1pt 1pt;gap:24px;margin-bottom:32px">
           <div>
             <p style="margin:0 0 6px;font-size:14px;color:#888">Invoice</p>
             <p style="margin:0;font-size:16px;font-weight:600;color:#111">${orderNumber}</p>
@@ -50,7 +50,7 @@ function buildInvoiceHtml({ name, email, phone, address, location, notes, orderN
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px">
+        <div style="display:grid;grid-template-columns:1pt 1pt;gap:24px;margin-bottom:32px">
           <div>
             <p style="margin:0 0 8px;font-size:14px;color:#888">Customer</p>
             <p style="margin:0;font-size:16px;color:#111">${name}</p>
@@ -103,10 +103,28 @@ function buildInvoiceHtml({ name, email, phone, address, location, notes, orderN
   `;
 }
 
+export async function OPTIONS(request: Request) {
+  const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL || "*";
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": allowedOrigin,
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
+}
+
 export async function POST(request: Request) {
   try {
+    const origin = request.headers.get('origin') || '';
+    const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL || "*";
+    if (allowedOrigin !== "*" && origin !== allowedOrigin) {
+      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { name, email, phone, address, location, notes, items, subtotal, deliveryFee, total } = body;
+    const { name, email, phone, address, location, notes, items, total } = body;
 
     if (!name || !email || !phone || !address || !location || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Missing required order data." }, { status: 400 });
@@ -117,7 +135,6 @@ export async function POST(request: Request) {
     const orderNumber = generateOrderNumber();
 
     // ----- Server‑side price verification -----
-    // Fetch latest product prices and stock from Supabase
     const adminClient = getSupabaseAdmin();
     if (!adminClient) {
       return NextResponse.json({ error: "Supabase admin client is not configured." }, { status: 500 });
@@ -142,10 +159,14 @@ export async function POST(request: Request) {
       }
       const price = Number(prod.price);
       serverSubtotal += price * it.quantity;
-      // Overwrite client supplied price with server price for consistency
       it.product.price = price;
     }
     const serverTotal = serverSubtotal + computedDeliveryFee;
+
+    // Validate client‑provided total
+    if (Number(total) !== serverTotal) {
+      return NextResponse.json({ error: "Order total mismatch" }, { status: 400 });
+    }
 
     const invoiceHtml = buildInvoiceHtml({
       name,
@@ -180,15 +201,13 @@ export async function POST(request: Request) {
       address: address.trim(),
       location: normalizedLocation,
       notes: notes?.trim() ?? "",
-      subtotal: Number(subtotal ?? 0),
-      delivery_fee: Number(deliveryFee ?? computedDeliveryFee),
-      total: Number(total ?? subtotal + computedDeliveryFee),
+      subtotal: serverSubtotal,
+      delivery_fee: computedDeliveryFee,
+      total: serverTotal,
       status: "Pending",
       items,
-      invoice_pdf_base64: pdfBuffer ? pdfBuffer.toString("base64") : null
+      invoice_pdf_base64: pdfBuffer ? pdfBuffer.toString("base64") : null,
     };
-
-
 
     const { error: insertError } = await adminClient.from("orders").insert([orderData]);
     if (insertError) {
@@ -197,7 +216,9 @@ export async function POST(request: Request) {
 
     const invoiceBase64 = pdfBuffer ? pdfBuffer.toString("base64") : null;
 
-    return NextResponse.json({ success: true, orderNumber, invoiceBase64 });
+    return NextResponse.json({ success: true, orderNumber, invoiceBase64 }, {
+      headers: { "Access-Control-Allow-Origin": allowedOrigin },
+    });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to process order." }, { status: 500 });
   }
