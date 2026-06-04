@@ -37,7 +37,7 @@ export default function ProductCard({ product, cartQuantity = 0, onAddToCart }: 
         </div>
         <div className="space-y-3 pt-3">
           <p className="text-lg font-semibold text-white">NGN {product.price.toLocaleString()}</p>
-          <div className="flex flex-col sm:flex-row sm:gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Link href={`/shop/${product.id}`} className="btn btn-secondary w-full sm:w-auto min-w-0 px-3 py-2 text-[0.6rem] tracking-[0.16em] sm:px-4 sm:text-[0.68rem]">
               View details
             </Link>

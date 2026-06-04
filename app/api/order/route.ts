@@ -116,7 +116,50 @@ export async function POST(request: Request) {
     const computedDeliveryFee = deliveryRates[normalizedLocation] ?? deliveryRates.Other;
     const orderNumber = generateOrderNumber();
 
-    const invoiceHtml = buildInvoiceHtml({ name, email, phone, address, location: normalizedLocation, notes: notes ?? "", orderNumber, subtotal: Number(subtotal ?? 0), deliveryFee: Number(deliveryFee ?? computedDeliveryFee), total: Number(total ?? subtotal + computedDeliveryFee), items });
+    // ----- Server‑side price verification -----
+    // Fetch latest product prices and stock from Supabase
+    const adminClient = getSupabaseAdmin();
+    if (!adminClient) {
+      return NextResponse.json({ error: "Supabase admin client is not configured." }, { status: 500 });
+    }
+    const productIds = items.map((it: any) => it.product.id);
+    const { data: productRows, error: prodError } = await adminClient
+      .from("products")
+      .select("id,price,stock,in_stock")
+      .in("id", productIds);
+    if (prodError) {
+      return NextResponse.json({ error: prodError.message }, { status: 500 });
+    }
+    const productMap = new Map(productRows.map((p: any) => [p.id, p]));
+    let serverSubtotal = 0;
+    for (const it of items) {
+      const prod = productMap.get(it.product.id);
+      if (!prod) {
+        return NextResponse.json({ error: `Product ${it.product.id} not found.` }, { status: 400 });
+      }
+      if (!prod.in_stock || prod.stock < it.quantity) {
+        return NextResponse.json({ error: `Insufficient stock for product ${it.product.id}.` }, { status: 400 });
+      }
+      const price = Number(prod.price);
+      serverSubtotal += price * it.quantity;
+      // Overwrite client supplied price with server price for consistency
+      it.product.price = price;
+    }
+    const serverTotal = serverSubtotal + computedDeliveryFee;
+
+    const invoiceHtml = buildInvoiceHtml({
+      name,
+      email,
+      phone,
+      address,
+      location: normalizedLocation,
+      notes: notes ?? "",
+      orderNumber,
+      subtotal: serverSubtotal,
+      deliveryFee: computedDeliveryFee,
+      total: serverTotal,
+      items,
+    });
 
     let pdfBuffer: Buffer | null = null;
     try {
@@ -145,10 +188,7 @@ export async function POST(request: Request) {
       invoice_pdf_base64: pdfBuffer ? pdfBuffer.toString("base64") : null
     };
 
-    const adminClient = getSupabaseAdmin();
-    if (!adminClient) {
-      return NextResponse.json({ error: "Supabase admin client is not configured. Check SUPABASE_SERVICE_ROLE_KEY." }, { status: 500 });
-    }
+
 
     const { error: insertError } = await adminClient.from("orders").insert([orderData]);
     if (insertError) {
