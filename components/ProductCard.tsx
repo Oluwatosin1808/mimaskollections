@@ -37,15 +37,15 @@ export default function ProductCard({ product, cartQuantity = 0, onAddToCart }: 
         </div>
         <div className="space-y-3 pt-3">
           <p className="text-lg font-semibold text-white">NGN {product.price.toLocaleString()}</p>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <Link href={`/shop/${product.id}`} className="btn btn-secondary min-w-0 px-3 py-2 text-[0.6rem] tracking-[0.16em] sm:px-4 sm:text-[0.68rem]">
+          <div className="flex flex-col sm:flex-row sm:gap-2">
+            <Link href={`/shop/${product.id}`} className="btn btn-secondary w-full sm:w-auto min-w-0 px-3 py-2 text-[0.6rem] tracking-[0.16em] sm:px-4 sm:text-[0.68rem]">
               View details
             </Link>
             <button
               type="button"
               onClick={onAddToCart}
               disabled={isSoldOut}
-              className={`btn min-w-0 px-3 py-2 text-[0.6rem] tracking-[0.16em] sm:px-4 sm:text-[0.68rem] ${isSoldOut ? "btn-disabled" : "btn-primary"}`}
+              className={`btn w-full sm:w-auto min-w-0 px-3 py-2 text-[0.6rem] tracking-[0.16em] sm:px-4 sm:text-[0.68rem] ${isSoldOut ? "btn-disabled" : "btn-primary"}`}
             >
               {isSoldOut ? "Sold out" : "Add to cart"}
             </button>
