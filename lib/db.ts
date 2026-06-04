@@ -4,8 +4,8 @@ import { normalizeCategory, normalizeProduct } from "./catalog";
 import type { Category, Product } from "./types";
 
 function mapCategory(row: Record<string, unknown>): Category {
-  const id = String(row.id ?? row.slug ?? row.name ?? "unknown");
-  const title = String(row.title ?? row.name ?? id);
+  const id = normalizeCategory(String(row.slug ?? row.name ?? row.id ?? "appliances"));
+  const title = String(row.name ?? row.title ?? id);
   const subtitle = String(row.subtitle ?? row.description ?? "");
   const href = String(row.href ?? row.link ?? `/shop#${id}`);
   const icon = String(row.icon ?? row.symbol ?? "*");
@@ -42,7 +42,7 @@ export async function getCategories(): Promise<Category[]> {
   if (!supabase) return staticCategories;
 
   try {
-    const { data, error } = await supabase.from("categories").select("id, title, subtitle, href, icon");
+    const { data, error } = await supabase.from("categories").select("id, name, slug, image_url");
     if (error || !data || data.length === 0) return staticCategories;
     return data.map(mapCategory);
   } catch {

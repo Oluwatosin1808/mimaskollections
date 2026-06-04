@@ -4,6 +4,8 @@ import Testimonials from "../components/Testimonials";
 import { getHomepageMetadata } from "../lib/seo";
 import { getCategories } from "../lib/db";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = getHomepageMetadata();
 
 export default async function HomePage() {

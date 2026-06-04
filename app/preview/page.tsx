@@ -5,11 +5,11 @@ import { getStaticPageMetadata } from "../../lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = getStaticPageMetadata(
-  "Shop",
-  "Shop by category for premium home appliances, household essentials, souvenirs, and gift items from Mimaskollections."
+  "Preview",
+  "Live preview of the shop page with current product data."
 );
 
-export default async function ShopPage() {
+export default async function PreviewPage() {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
 
   return (
