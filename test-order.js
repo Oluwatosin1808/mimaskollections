@@ -34,7 +34,7 @@ const payload = JSON.stringify({
 
 const options = {
   hostname: '127.0.0.1',
-  port: 3002,
+  port: 3000,
   path: '/api/order',
   method: 'POST',
   headers: {

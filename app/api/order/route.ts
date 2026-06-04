@@ -124,16 +124,9 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, email, phone, address, location, notes, items, total } = body;
-
-    if (!name || !email || !phone || !address || !location || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: "Missing required order data." }, { status: 400 });
-    }
-
-    const normalizedLocation = typeof location === "string" ? location : String(location);
-    const computedDeliveryFee = deliveryRates[normalizedLocation] ?? deliveryRates.Other;
+    const { name, email, phone, address, location, notes, items, subtotal, deliveryFee, total } = body;
+    const computedDeliveryFee = deliveryRates[typeof location === "string" ? location : String(location)] ?? deliveryRates.Other;
     const orderNumber = generateOrderNumber();
-
     // ----- Server‑side price verification -----
     const adminClient = getSupabaseAdmin();
     if (!adminClient) {
@@ -162,11 +155,22 @@ export async function POST(request: Request) {
       it.product.price = price;
     }
     const serverTotal = serverSubtotal + computedDeliveryFee;
-
-    // Validate client‑provided total
-    if (Number(total) !== serverTotal) {
+    // Validate client-provided totals (if present) against server-calculated values
+    if (typeof subtotal !== "undefined" && Number(subtotal) !== serverSubtotal) {
+      return NextResponse.json({ error: "Order subtotal mismatch" }, { status: 400 });
+    }
+    if (typeof deliveryFee !== "undefined" && Number(deliveryFee) !== computedDeliveryFee) {
+      return NextResponse.json({ error: "Delivery fee mismatch" }, { status: 400 });
+    }
+    if (typeof total !== "undefined" && Number(total) !== serverTotal) {
       return NextResponse.json({ error: "Order total mismatch" }, { status: 400 });
     }
+
+    if (!name || !email || !phone || !address || !location || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: "Missing required order data." }, { status: 400 });
+    }
+
+    const normalizedLocation = typeof location === "string" ? location : String(location);
 
     const invoiceHtml = buildInvoiceHtml({
       name,
