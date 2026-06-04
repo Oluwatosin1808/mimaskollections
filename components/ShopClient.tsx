@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import BannerCarousel from "./BannerCarousel";
-import ProductCard from "./ProductCard";
+import dynamic from "next/dynamic";
+
+const BannerCarousel = dynamic(() => import("./BannerCarousel"), { ssr: false });
+const ProductCard = dynamic(() => import("./ProductCard"), { ssr: false });
+
 import {
   CMS_PRODUCTS_STORAGE_KEY,
   LEGACY_CMS_PRODUCTS_STORAGE_KEY,
@@ -39,7 +42,7 @@ export default function ShopClient({ products, categories }: ShopClientProps) {
   const [cmsProducts, setCmsProducts] = useState<Product[]>([]);
   const { addToCart, items } = useCart();
   const [page, setPage] = useState(1);
-  const perPage = 10;
+  const perPage = 12;
 
   useEffect(() => {
     setCmsProducts(loadCmsProducts());
